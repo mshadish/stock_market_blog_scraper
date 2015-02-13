@@ -31,6 +31,8 @@ def attemptUrl(url, in_attempts = 5, interval = 3):
     page = None
 
     # try to open the URL
+    # until we run out of "attempts,"
+    # at which point we will move on
     while attempts > 0:
         
         try:
