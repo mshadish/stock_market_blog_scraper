@@ -3,75 +3,31 @@ Matt Shadish
 
 This script scrapes Kiplinger's stock watch page
 http://www.kiplinger.com/fronts/archive/column/index.html?column_id=8&si=1
+
+Below are a few of the relevent functions defined in this script
+
+1) extractLinks(url)
+    - extracts links to individual articles
+    - from a page (assumed to be the kiplinger url constant)
+
+2) extractArticleText((date, url))
+    - extracts the text from the links returned from the previous function
+    
+3) saveArticle
+    - Saves articles found in the links
+    extracted from the previous two functions
 """
 
-
-from bs4 import BeautifulSoup
 import time
 import re
-import urllib2
 import random
 import os
+from utils import attemptUrl
+from utils import soupify
 
-
+# let's define the kiplinger url as a constant
 kip_url = 'http://www.kiplinger.com/fronts/archive/column/index.html?column_id=8&si=1'
 
-def attemptUrl(url, in_attempts = 5, interval = 3):
-    """
-    This function will attempt to open a URL a specific number of times
-    before exiting
-    
-    Returns the instance returned from urllib2.urlopen()
-    """
-    # Initialize variables
-    attempts = in_attempts
-    request = urllib2.Request(url)
-    page = None
-
-    # try to open the URL
-    while attempts > 0:
-        
-        try:
-            page = urllib2.urlopen(request)
-            return page
-        except urllib2.URLError, e:
-            # catch the error, we may try again
-            if hasattr(e, 'reason'):
-                print e.reason
-            
-                # if the error is 'service unavailable', keep trying the url
-                if str(e.reason).strip() == 'Service Unavailable':
-                    print 'Trying ' + str(attempts-1) + ' more times'
-                    print 'Waiting ' + str(interval) + ' sec, give or take'
-                    # pause
-                    wait = round(max(0, interval + random.gauss(0,0.5)), 2)
-                    time.sleep(wait)
-                
-            elif hasattr(e, 'code'):
-                print 'Error: ' + str(e.code)
-                break
-            
-        attempts -= 1
-    # end while loop
-        
-    # if we've made it out of the loop, we failed to open the page
-    print 'Failed to open the url'
-    return None
-    
-    
-def soupify(page):
-    """
-    Takes in a page object
-    Reads the page, returns a Beautiful Soup object
-    with newlines subbed out
-    """
-    content = page.read()
-    content = re.sub('\n', '', content)
-    content = re.sub('\t', '', content)
-    soup = BeautifulSoup(content, 'html5lib')
-    
-    return soup
-    
     
 def extractLinks(url):
     """
@@ -107,29 +63,6 @@ def extractLinks(url):
         
     return list_of_links    
     
-    
-def saveArticle(date, page_text, url):
-    """
-    This function takes in a string that represents the date of an article
-    as well as the article's text and the title we want to call the file
-    Writes a file in the current working directory with the page text
-    """
-    # First check if directory exists, make directory if necessary
-    if not os.path.exists('kip_scrape_files'):
-        os.makedirs('kip_scrape_files')
-    
-    page_title = re.findall(
-        r'(?<=\w\d{3}\-)(?!\w\d{3})[0-9a-zA-Z\-]+(?=\.html)',
-        url)[0]
-        
-    in_date = re.sub(r'\W', '_', date)
-        
-    outfile = open('kip_scrape_files/' + in_date + '_' + page_title + '.txt',
-                   'w')
-    outfile.write(page_text.encode('utf8'))
-    outfile.close()
-    
-    return None
     
     
 def extractArticleText(list_of_tuples):
@@ -188,6 +121,32 @@ def extractArticleText(list_of_tuples):
         time.sleep(wait_time)
         
     return None
+    
+    
+    
+def saveArticle(date, page_text, url):
+    """
+    This function takes in a string that represents the date of an article
+    as well as the article's text and the title we want to call the file
+    Writes a file in the current working directory with the page text
+    """
+    # First check if directory exists, make directory if necessary
+    if not os.path.exists('kip_scrape_files'):
+        os.makedirs('kip_scrape_files')
+    
+    page_title = re.findall(
+        r'(?<=\w\d{3}\-)(?!\w\d{3})[0-9a-zA-Z\-]+(?=\.html)',
+        url)[0]
+        
+    in_date = re.sub(r'\W', '_', date)
+        
+    outfile = open('kip_scrape_files/' + in_date + '_' + page_title + '.txt',
+                   'w')
+    outfile.write(page_text.encode('utf8'))
+    outfile.close()
+    
+    return None
+    
         
         
 if __name__ == '__main__':

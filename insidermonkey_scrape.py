@@ -1,20 +1,40 @@
-# Matt Shadish
-# MSAN 692
+"""
+Matt Shadish
 
-# Scraping insidermonkey
-# http://www.insidermonkey.com/blog/
+This script scrapes insidermonkey's stock blog postings
+http://www.insidermonkey.com/blog/
+Each blog is saved as its own individual .txt file
 
+Explained below are several of the functions defined in this script:
 
-from bs4 import BeautifulSoup
+1) extractBlogLinks(url)
+    - takes in a url (assumed of the form at insidermonkey.com/blog)
+    - extracts a list of the blog links
+    as well as a link to the next blog links page
+
+2) extractArticleContents(page_url)
+    - takes in a link to a blog from insidermonkey's blog page
+    - pulls out the article's title, date, and body
+
+3) saveArticle((title, date, content))
+    - takes in the fields returned from the previous function
+    for a specific page
+    - saves the input as a .txt file
+
+4) parseArgument()
+    - parses arguments from the command line
+    specific to this script
+"""
+
 import time
 import re
-import urllib2
 import random
 import os
-from kiplinger_scrape import attemptUrl
-from kiplinger_scrape import soupify
+from utils import attemptUrl
+from utils import soupify
 import argparse
 
+# define the url we will work with as a constant
 insidermonkey_url = 'http://www.insidermonkey.com/blog/'
 
 
@@ -49,6 +69,7 @@ def extractBlogLinks(url):
     return (blog_link_list, next_page_link)
     
     
+    
 def extractArticleContents(page_url):
     """
     This function takes the url of a article
@@ -59,25 +80,26 @@ def extractArticleContents(page_url):
     """
     page = attemptUrl(page_url)
     soup = soupify(page)
+    
     # First, we need to check if there is a "see all" option for the post
     if soup.find_all('div', {'class': 'see-all'}):
-        
         # we found a 'see-all' tag, so grab the link
         see_all_tag = soup.find_all('div', {'class': 'see-all'})[0]
         see_all_link = see_all_tag.findChild('a').get('href')
         
-        # and we will extract the full contents from that pages
+        # and we will extract the full contents from that pages, recursively
         return extractArticleContents(see_all_link)
         
+    # otherwise, we will pull out the content, title, and date
     else:
-        
         # grab the text
         try:
             # find where the text is in the doc
             content_obj = soup.find_all('div',
-                                {'class': 'blog-content-container clearfix'})[0]
+                            {'class': 'blog-content-container clearfix'})[0]
             content_child = content_obj.findChild('div', {'class': 'post'})
-            content_gchild = content_child.findChild('div', {'class': re.compile(r'content\-with.*-wrap')})
+            content_gchild = content_child.findChild('div',
+                                {'class': re.compile(r'content\-with.*-wrap')})
             # grab the text
             content_text = content_gchild.get_text()
         except:
@@ -104,8 +126,8 @@ def extractArticleContents(page_url):
             print 'could not extract the date: ' + page_url
             date = None
             
-        
         return (title, date, content_text)
+        
         
         
 def saveArticle(tuple_obj):
@@ -160,6 +182,21 @@ def saveArticle(tuple_obj):
     outfile.close()
     
     return None
+    
+    
+    
+def parseArgument():
+    """                                                                        
+    Code for parsing arguments
+    """
+    # initialize the parser
+    parser = argparse.ArgumentParser(description='Parsing a file.')
+    # add an optional argument for taking in a url
+    # ...but the default will be our insidermonkey url
+    parser.add_argument('-u', nargs=1, required=False)
+    args = vars(parser.parse_args())
+    return args
+    
 
 
 def main(url = insidermonkey_url):
@@ -185,18 +222,11 @@ def main(url = insidermonkey_url):
         count_pages += 1
         
         (blog_links, next_link) = extractBlogLinks(next_link)
+    # repeat for every incoming link until there are no more
         
     return None
     
     
-def parseArgument():
-    """                                                                         
-    Code for parsing arguments                                                  
-    """
-    parser = argparse.ArgumentParser(description='Parsing a file.')
-    parser.add_argument('-u', nargs=1, required=False)
-    args = vars(parser.parse_args())
-    return args
 
 if __name__ == '__main__':
     args = parseArgument()
