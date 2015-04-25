@@ -65,6 +65,31 @@ def extractLinks(url):
     
     
     
+def saveArticle(date, page_text, url):
+    """
+    This function takes in a string that represents the date of an article
+    as well as the article's text and the title we want to call the file
+    Writes a file in the current working directory with the page text
+    """
+    # First check if directory exists, make directory if necessary
+    if not os.path.exists('kip_scrape_files'):
+        os.makedirs('kip_scrape_files')
+    
+    page_title = re.findall(
+        r'(?<=\w\d{3}\-)(?!\w\d{3})[0-9a-zA-Z\-]+(?=\.html)',
+        url)[0]
+        
+    in_date = re.sub(r'\W', '_', date)
+        
+    outfile = open('kip_scrape_files/' + in_date + '_' + page_title + '.txt',
+                   'w')
+    outfile.write(page_text.encode('utf8'))
+    outfile.close()
+    
+    return
+    
+    
+    
 def extractArticleText(list_of_tuples):
     """
     Takes in a list of tuples returned by extractLinks
@@ -120,32 +145,7 @@ def extractArticleText(list_of_tuples):
         wait_time = round(max(0, random.gauss(0, 0.5)), 2)
         time.sleep(wait_time)
         
-    return None
-    
-    
-    
-def saveArticle(date, page_text, url):
-    """
-    This function takes in a string that represents the date of an article
-    as well as the article's text and the title we want to call the file
-    Writes a file in the current working directory with the page text
-    """
-    # First check if directory exists, make directory if necessary
-    if not os.path.exists('kip_scrape_files'):
-        os.makedirs('kip_scrape_files')
-    
-    page_title = re.findall(
-        r'(?<=\w\d{3}\-)(?!\w\d{3})[0-9a-zA-Z\-]+(?=\.html)',
-        url)[0]
-        
-    in_date = re.sub(r'\W', '_', date)
-        
-    outfile = open('kip_scrape_files/' + in_date + '_' + page_title + '.txt',
-                   'w')
-    outfile.write(page_text.encode('utf8'))
-    outfile.close()
-    
-    return None
+    return
     
         
         

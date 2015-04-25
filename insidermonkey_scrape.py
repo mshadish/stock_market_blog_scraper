@@ -181,7 +181,7 @@ def saveArticle(tuple_obj):
         print 'could not write the file: ' + file_name + '.txt'
     outfile.close()
     
-    return None
+    return
     
     
     
@@ -224,7 +224,7 @@ def main(url = insidermonkey_url):
         (blog_links, next_link) = extractBlogLinks(next_link)
     # repeat for every incoming link until there are no more
         
-    return None
+    return
     
     
 
